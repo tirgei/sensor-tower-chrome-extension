@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Sensor Tower App Metrics",
+  "version": "1.0.0",
+  "description": "Display Sensor Tower app metrics on App Store and Play Store pages",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://app.sensortower.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://apps.apple.com/*",
+        "https://play.google.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
+

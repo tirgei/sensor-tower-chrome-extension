@@ -1,0 +1,117 @@
+#sensor-tower-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.st-header {
+  background-color: #2a2a2a;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffffff;
+  border-bottom: 1px solid #333;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.st-header:hover {
+  background-color: #333;
+}
+
+.st-toggle-icon {
+  font-size: 12px;
+  color: #b0b0b0;
+  transition: transform 0.2s;
+}
+
+.st-content {
+  padding: 16px;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  max-height: 1000px;
+}
+
+#sensor-tower-popup.st-collapsed .st-content {
+  max-height: 0;
+  padding: 0 16px;
+  overflow: hidden;
+}
+
+#sensor-tower-popup.st-collapsed .st-header {
+  border-bottom: none;
+  border-radius: 8px;
+}
+
+.st-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.st-row:last-child {
+  border-bottom: none;
+}
+
+.st-label {
+  color: #b0b0b0;
+  font-weight: 500;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.st-value {
+  color: #ffffff;
+  font-weight: 600;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
+}
+
+.st-link {
+  color: #4a9eff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.st-link:hover {
+  color: #6bb3ff;
+  text-decoration: underline;
+}
+
+.st-loading {
+  text-align: center;
+  padding: 20px;
+  color: #b0b0b0;
+  font-style: italic;
+}
+
+.st-error {
+  text-align: center;
+  padding: 20px;
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+/* Ensure popup stays on top */
+#sensor-tower-popup {
+  pointer-events: auto;
+}
+
