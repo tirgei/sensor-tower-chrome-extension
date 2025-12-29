@@ -63,13 +63,129 @@
     }
   }
 
+  // Load saved popup position
+  function loadPopupPosition() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['popupPosition'], (result) => {
+        if (result.popupPosition) {
+          resolve(result.popupPosition);
+        } else {
+          resolve({ top: 20, right: 20 }); // Default position
+        }
+      });
+    });
+  }
+
+  // Save popup position
+  function savePopupPosition(position) {
+    chrome.storage.local.set({ popupPosition: position });
+  }
+
+  // Setup drag functionality
+  function setupDrag(popup) {
+    const header = popup.querySelector('.st-header');
+    let isDragging = false;
+    let hasMoved = false;
+    let startX, startY, initialTop, initialRight;
+    let dragOccurred = false;
+
+    const handleMouseDown = (e) => {
+      // Don't start drag if clicking on toggle icon
+      if (e.target.classList.contains('st-toggle-icon')) {
+        return;
+      }
+
+      isDragging = true;
+      hasMoved = false;
+      dragOccurred = false;
+      popup.classList.add('st-dragging');
+      
+      const rect = popup.getBoundingClientRect();
+      startX = e.clientX;
+      startY = e.clientY;
+      initialTop = rect.top;
+      initialRight = window.innerWidth - rect.right;
+
+      e.preventDefault();
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      // Check if mouse has moved significantly (more than 3px)
+      if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+        hasMoved = true;
+        dragOccurred = true;
+      }
+
+      const newTop = initialTop + deltaY;
+      const newRight = initialRight - deltaX;
+
+      // Constrain to viewport
+      const maxTop = window.innerHeight - popup.offsetHeight;
+      const maxRight = window.innerWidth - popup.offsetWidth;
+      
+      const constrainedTop = Math.max(0, Math.min(newTop, maxTop));
+      const constrainedRight = Math.max(0, Math.min(newRight, maxRight));
+
+      popup.style.top = `${constrainedTop}px`;
+      popup.style.right = `${constrainedRight}px`;
+      popup.style.left = 'auto';
+      popup.style.bottom = 'auto';
+    };
+
+    const handleMouseUp = () => {
+      if (!isDragging) return;
+      
+      const wasDragging = hasMoved;
+      isDragging = false;
+      popup.classList.remove('st-dragging');
+
+      if (wasDragging) {
+        // Save position if we actually dragged
+        const rect = popup.getBoundingClientRect();
+        const position = {
+          top: rect.top,
+          right: window.innerWidth - rect.right
+        };
+        savePopupPosition(position);
+      }
+
+      // Reset dragOccurred after a short delay to allow click handler to check it
+      setTimeout(() => {
+        dragOccurred = false;
+      }, 100);
+    };
+
+    header.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    // Cleanup on popup removal
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(popup)) {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Return function to check if drag occurred
+    return () => dragOccurred;
+  }
+
   // Create popup element
-  function createPopup() {
+  async function createPopup() {
     const popup = document.createElement('div');
     popup.id = 'sensor-tower-popup';
     popup.className = 'st-collapsed';
     popup.innerHTML = `
       <div class="st-header">
+        <span class="st-drag-handle">⋮⋮</span>
         <span>Sensor Tower Metrics</span>
         <span class="st-toggle-icon">▼</span>
       </div>
@@ -78,12 +194,37 @@
       </div>
     `;
     
+    // Load and apply saved position
+    const savedPosition = await loadPopupPosition();
+    popup.style.top = `${savedPosition.top}px`;
+    popup.style.right = `${savedPosition.right}px`;
+    
+    // Setup drag functionality
+    const checkDragOccurred = setupDrag(popup);
+    
     // Add toggle functionality
     const header = popup.querySelector('.st-header');
-    header.addEventListener('click', () => {
+    const toggleIcon = popup.querySelector('.st-toggle-icon');
+    
+    // Toggle on header click (but not if we just dragged)
+    header.addEventListener('click', (e) => {
+      // Don't toggle if clicking on toggle icon (it has its own handler)
+      if (e.target.classList.contains('st-toggle-icon')) {
+        return;
+      }
+      // Don't toggle if we just dragged
+      if (checkDragOccurred()) {
+        return;
+      }
       popup.classList.toggle('st-collapsed');
-      const icon = popup.querySelector('.st-toggle-icon');
-      icon.textContent = popup.classList.contains('st-collapsed') ? '▼' : '▲';
+      toggleIcon.textContent = popup.classList.contains('st-collapsed') ? '▼' : '▲';
+    });
+    
+    // Toggle icon click
+    toggleIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      popup.classList.toggle('st-collapsed');
+      toggleIcon.textContent = popup.classList.contains('st-collapsed') ? '▼' : '▲';
     });
     
     document.body.appendChild(popup);
@@ -172,7 +313,7 @@
   }
 
   // Main function
-  function init() {
+  async function init() {
     // Check if popup already exists
     if (document.getElementById('sensor-tower-popup')) {
       return;
@@ -186,7 +327,7 @@
     }
 
     // Create popup
-    const popup = createPopup();
+    await createPopup();
 
     // Fetch and display data
     fetchAppData(appId, platform)

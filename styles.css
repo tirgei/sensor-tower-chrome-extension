@@ -25,13 +25,37 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
+  cursor: move;
   user-select: none;
   transition: background-color 0.2s;
 }
 
 .st-header:hover {
   background-color: #333;
+}
+
+.st-drag-handle {
+  color: #666;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 8px;
+  cursor: move;
+  user-select: none;
+  letter-spacing: -2px;
+}
+
+.st-header:hover .st-drag-handle {
+  color: #999;
+}
+
+#sensor-tower-popup.st-dragging {
+  cursor: move;
+  user-select: none;
+}
+
+#sensor-tower-popup.st-dragging .st-header {
+  cursor: move;
+  background-color: #3a3a3a;
 }
 
 .st-toggle-icon {

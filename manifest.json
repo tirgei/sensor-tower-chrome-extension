@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Display Sensor Tower app metrics on App Store and Play Store pages",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "host_permissions": [
     "https://app.sensortower.com/*"
